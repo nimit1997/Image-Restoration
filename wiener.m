@@ -1,22 +1,18 @@
 %Nimit Kapadia
 
-psf_kernel = im2double(imread('kernel4G_center.png')); %reading the kernel image and bringing the array values between 0 and 1
+psf_kernel = im2double(imread('Kernel4G_center.png')); %reading the kernel image and bringing the array values between 0 and 1
 %using im2double
 norm_factor = sum(sum(psf_kernel)); %normalizing factor
 psf_kernel = psf_kernel./norm_factor; %normalization
 blurd = imread('VBlur.jpg'); %reading the blurred image
 %R = psf_kernel(:,:,1) 
 
-p = [0,-1,0;-1,4,-1;0,-1,0]; %laplacian operator
-P = fftshift(fft2(p,PQ(1),PQ(2))); %dft of the laplacian operator
-%P = dft2(p,PQ(1),PQ(2));
-
 PQ = paddedsize(size(blurd)); %computing padded sizes useful for FFT-based filtering
 H = fftshift(fft2(double(psf_kernel), PQ(1), PQ(2))); %dft of the kernel
 %H = dft2(psf_kernel, PQ(1), PQ(2));
-gammafactor = input('gamma = ');
-gammafactor = typecast(gammafactor,'double');
-while(gammafactor>-1)
+kfactor = input('k = ');
+kfactor = typecast(kfactor,'double');
+while(kfactor>-1)
     GR = fftshift(fft2(double(blurd(:,:,1)), PQ(1), PQ(2))); %dft of the blurred image (Red)
     %GR = dft2(double(blurd(:,:,1)), PQ(1), PQ(2));
     GG = fftshift(fft2(double(blurd(:,:,2)), PQ(1), PQ(2))); %dft of the blurred image (Green)
@@ -28,17 +24,17 @@ while(gammafactor>-1)
     F(:,:,2) = GG; %substituting dft values of green channel to the F matrix
     F(:,:,3) = GB; %substituting dft values of blue channel to the F matrix
     
-    %Constrained Least Square filtering formula
+    %Wiener filtering formula
     HMODSQR = abs(H).*abs(H);
-    PMODSQR = abs(P).*abs(P);
-    DEN = bsxfun(@plus,HMODSQR,gammafactor*PMODSQR);
-    G = conj(H)./DEN;
+    DEN = bsxfun(@plus,HMODSQR,kfactor);
+    DEN = DEN.*H;
+    G = HMODSQR./DEN;
   
-    %Inverse filtering using constrained least square filtering formula by putting gamma = 0
+    %Inverse filtering using Wiener filtering formula by putting k = 0
 %     dummy = ones(PQ(1),PQ(2));
 %     G = dummy./H;
     
-    %constrained least square filtering on all three channels
+    %wiener filtering on all three channels
     F(:,:,1) = G.*GR;
     F(:,:,2) = G.*GG;
     F(:,:,3) = G.*GB;
@@ -63,11 +59,11 @@ while(gammafactor>-1)
     RGB_filtered(:,:,3) = real(B_filtered);
 
     figure, imshow(RGB_filtered,[])
-    gammafactor = input('gamma = ');
+    kfactor = input('k = ');
     
     %calculates peak signal to noise ratio
-    %peaksnr = psnr(RGB_filtered,imread('GroundTruth2_1_1.jpg'))
+    %peaksnr = psnr(RGB_filtered,imread('GroundTruth1_1_1.jpg'))
     
     %calculates ssim value
-    %ssimval = ssim(RGB_filtered,imread('GroundTruth2_1_1.jpg'))
+    %ssimval = ssim(RGB_filtered,imread('GroundTruth1_1_1.jpg'))
 end
