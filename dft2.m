@@ -1,3 +1,5 @@
+%Nimit Kapadia
+
 function F=dft2(f,M1,N1)
 M=size(f,1);
 N=size(f,2);

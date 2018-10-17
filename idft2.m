@@ -1,3 +1,5 @@
+%Nimit Kapadia
+
 function f=idft2(F)
 
 H= zeros(size(F,1),size(F,2));

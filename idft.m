@@ -1,3 +1,5 @@
+%Nimit Kapadia
+
 function z=idft(x)
 
 N=size(x,2);
